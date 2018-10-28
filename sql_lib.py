@@ -36,6 +36,12 @@ class sql(object):
     def add_value(self, db, tb, **kwargs):
         """Adds entries inside sql db
         """
+        
+        order_dict = {1: 'name', 2: 'gda', 3: 'gpa', 4: 'mja', 5: 'mgda', 6: 'mgpa',
+                                 7: 'gdd', 8: 'gpd', 9: 'mjd',10: 'mgdd',11: 'mgpd', 
+                                12: 'va', 13: 'ea', 14: 'ia', 
+                                15: 'vd', 16: 'ed', 17: 'ed'}
+
 
         if tb not in get_sql_db_table(db = db):
             self.add_table(db, tb, **kwargs)
@@ -43,29 +49,44 @@ class sql(object):
         self.connect(db)
         self.cursor = self.con.cursor()
 
-        k = ''
-        v = ''
+        #check if row exists; if yes, update data; if no, add data
+        exists = self.cursor.execute('select name from %s where name = "%s"' \
+                                       %(tb, kwargs['name'])).fetchall()
+        
+        if not exists:    
+            k = v =  ''
 
-        for key, val in kwargs.items():
-            k = k + '%s, ' %key
-            v = v + '"%s", ' %val
+            for key, val in kwargs.items():
+                k = k + '%s, ' %key
+                v = v + '"%s", ' %val
 
-        k = k.replace('', '')[:-2]
-        v = v.replace('', '')[:-2]
+            k = k.replace('', '')[:-2]
+            v = v.replace('', '')[:-2]
 
-        cmd = 'INSERT INTO %s (%s) VALUES (%s);' %(tb, k, v)
+            cmd = 'INSERT INTO %s (%s) VALUES (%s);' %(tb, k, v)
 
-        self.cursor.execute(cmd)
-        self.con.commit()
+            self.cursor.execute(cmd)
+            self.con.commit()
 
-        self.close()
+            self.close()
+        
+        else:
+            update = wh = ''
+            cmd = 'update %s set ' %tb
+            for key, val in kwargs.items():
+                if key != 'name':
+                    update = update + '%s = %s, ' %(key, val)
+                else:
+                    wh = ' where name = "%s";' %kwargs['name']
+            cmd =  cmd + update.rstrip(', ') + wh
+            
+            self.cursor.execute(cmd)
+            self.con.commit()
+            
+            self.close()
 
-    def get_data(self, db, tb, field = '*', start = None, end = None, key = 'Time'):
+    def get_data(self, db, tb, field = '*'):
         """ 
-        if start and end - return values between them
-        if start - return values from "start" till "end" of file
-        if end - return values from begining till "end"
-        if not (start or end) - return all table content
         if filed == * - returns all fields
            else - returns selected field
         """
@@ -73,27 +94,7 @@ class sql(object):
         self.connect(db)
         self.cursor = self.con.cursor()
 
-        if start and end:
-            if start < end:
-                wh = 'WHERE time > %s and time < %s' %(start,end)
-            else:
-                print 'Start should be larger than end'
-        
-        elif start and not end:
-            wh = 'WHERE time > %s' %start
-        
-        elif not start and end:
-            wh = 'WHERE time < %s' %end
-
-        else:
-            wh = ''
-        
-        if key.lower() == 'time':
-            cmd = 'SELECT %s FROM %s %s ORDER BY time;' %(field, tb, wh)
-        elif key.lower() == 'ip':
-            cmd = 'SELECT %s FROM %s %s ORDER BY ip;' %(field, tb, wh)
-        elif key.lower() == 'name':
-            cmd = 'SELECT %s FROM %s %s ORDER BY Name;' %(field, tb, wh)
+        cmd = 'SELECT %s FROM %s;' %(field, tb)
     
         data = self.cursor.execute(cmd).fetchall()
         header = [i[0] for i in self.cursor.execute(cmd).description]
@@ -105,7 +106,7 @@ class sql(object):
 
         return res
 
-    def get_value(self, db, tb, field = '*', lookup = 'IP', value = None):
+    def get_value(self, db, tb, field = '*', lookup = 'name', value = None):
         """
         gets only one value from db file based on field and field value
         gets entire column based on field

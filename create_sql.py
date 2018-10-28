@@ -1,11 +1,13 @@
+from __future__ import division
 from sql_lib import sql
+from collections import OrderedDict
 import os
 
 def get_files():
 
     cwd = os.getcwd() + '/data/'
-    csv_1 = []
-    csv_2 = []
+    csv_1 = []  #for big data (sp,ge,fr, etc. )
+    csv_2 = []  #for small data (ro, pol, arg, etc.)
 
     for root, dirs, files in os.walk(cwd):
         for f in files:
@@ -23,7 +25,7 @@ def data_big(filename):
     content = file(filename, 'r').readlines()
     data = {}
     header = content.pop(0).split(',')
-    
+
     for line in content:
         line = line.split(',')
         if line[2] not in data.keys():
@@ -48,8 +50,6 @@ def data_big(filename):
             data[line[2]]['ed'] = 0
         if 'id' not in data[line[2]].keys():
             data[line[2]]['id'] = 0
-        if 'pct' not in data[line[2]].keys():
-            data[line[2]]['pct'] = 0
 
     for line in content:
         line = line.split(',')
@@ -61,27 +61,39 @@ def data_big(filename):
 
         if line[4] > line[5]:
             data[line[2]]['va'] += 1
-            data[line[2]]['pct'] += 3
             data[line[3]]['id'] += 1
 
         elif line[4] < line[5]:
             data[line[2]]['ia'] += 1
             data[line[3]]['vd'] += 1
-            data[line[3]]['pct'] += 3
 
         elif line[4] == line[5]:
             data[line[2]]['ea'] += 1
-            data[line[2]]['pct'] +=1
             data[line[3]]['ed'] += 1
-            data[line[3]]['pct'] += 1
+    
+    for key,val in data.items():
+        val['mja'] = val['va'] + val['ea'] + val['ia']
+        val['mgda'] = float(val['gda']/val['mja'])
+        val['mgpa'] = float(val['gpa']/val['mja'])
+        val['mjd'] = val['vd'] + val['ed'] + val['id']
+        val['mgdd'] = float(val['gdd']/val['mjd'])
+        val['mgpd'] = float(val['gpd']/val['mjd'])
+        
+        #print key, val
 
     return data
 
+inter = data_big('data/italia/italia_1_2018.csv')['Milan']
+#for i,j in inter.items():
+#    print "%s: %r" %(i,j)
+
+
 for fl in get_files()['big']:
+    year = fl
     liga = '_'.join(fl.split('/')[-1].split('.')[:-1])
     dt = data_big(fl)
     for k,v in sorted(dt.items()):
         dic = {'name': k}
         dic.update(v)
-        sql().add_value(db = '/home/radu/Football/data/all_2018.db', tb = liga, **dic)
+        sql().add_value(db = 'data/all_%s.db' %liga.split('_')[-1], tb = liga, **dic)
 
