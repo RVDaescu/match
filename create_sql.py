@@ -15,19 +15,20 @@ def get_files():
             if f.endswith('csv') and '_' in f:
                 csv_1.append(root + '/' + f)
 
-            elif f.endswith('csv') and ')' not in f:
+            elif f.endswith('csv') and '_' not in f:
                 csv_2.append(root + '/' + f)
 
     data = {'big': csv_1, 'small': csv_2}
     return data
 
 def data_big(filename):
+    
     content = file(filename, 'r').readlines()
     data = {}
     header = content.pop(0).split(',')
 
     for line in content:
-        line = line.split(',')
+        line = [i.strip() for i in line.split(',')]
         if line[2] not in data.keys():
             data[line[2]] = {}
         if 'gda' not in data[line[2]].keys():
@@ -52,8 +53,8 @@ def data_big(filename):
             data[line[2]]['id'] = 0
 
     for line in content:
-        line = line.split(',')
-
+        line = [i.strip() for i in line.split(',')]
+        
         data[line[2]]['gda'] += int(line[4])
         data[line[2]]['gpa'] += int(line[5])
         data[line[3]]['gdd'] += int(line[5])
@@ -73,27 +74,26 @@ def data_big(filename):
     
     for key,val in data.items():
         val['mja'] = val['va'] + val['ea'] + val['ia']
-        val['mgda'] = float(val['gda']/val['mja'])
-        val['mgpa'] = float(val['gpa']/val['mja'])
+        val['mgda'] = float(format(val['gda']/val['mja'], '.4f'))
+        val['mgpa'] = float(format(val['gpa']/val['mja'], '.4f'))
         val['mjd'] = val['vd'] + val['ed'] + val['id']
-        val['mgdd'] = float(val['gdd']/val['mjd'])
-        val['mgpd'] = float(val['gpd']/val['mjd'])
+        val['mgdd'] = float(format(val['gdd']/val['mjd'], '.4f'))
+        val['mgpd'] = float(format(val['gpd']/val['mjd'], '.4f'))
         
         #print key, val
 
     return data
 
-inter = data_big('data/italia/italia_1_2018.csv')['Milan']
+#inter = data_big('data/italia/italia_1_2016.csv')['Milan']
 #for i,j in inter.items():
 #    print "%s: %r" %(i,j)
 
-
 for fl in get_files()['big']:
-    year = fl
-    liga = '_'.join(fl.split('/')[-1].split('.')[:-1])
+    year = fl.split('_')[-1].rstrip('.csv')
+    liga = '_'.join(fl.split('/')[-1].split('_')[:2])
     dt = data_big(fl)
-    for k,v in sorted(dt.items()):
-        dic = {'name': k}
-        dic.update(v)
-        sql().add_value(db = 'data/all_%s.db' %liga.split('_')[-1], tb = liga, **dic)
-
+    if int(year) == 2018:
+        for k,v in sorted(dt.items()):
+            dic = {'name': k}
+            dic.update(v)
+            sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)

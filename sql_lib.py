@@ -15,6 +15,11 @@ class sql(object):
         """adds a table and its header
         """
 
+        order_dict = {1: 'name', 2: 'gda', 3: 'gpa', 4: 'mja', 5: 'mgda', 6: 'mgpa',
+                                 7: 'gdd', 8: 'gpd', 9: 'mjd',10: 'mgdd',11: 'mgpd', 
+                                12: 'va', 13: 'ea', 14: 'ia', 
+                                15: 'vd', 16: 'ed', 17: 'id'}
+        
         self.connect(db)
         self.cursor = self.con.cursor()
 
@@ -22,11 +27,17 @@ class sql(object):
 
         cmd = "CREATE TABLE %s (" %tb
 
-        for key, val in tb_fields.items():
-            cmd = cmd + "\"%s\" %s, " %(key, val)
-        
-        cmd = cmd+ " PRIMARY KEY(name));"
+        for key in tb_fields:
+            if key not in order_dict.values():
+                print 'Column %s is not in order_dict, please added it' %key
+                #return False
 
+        for i in order_dict.values():
+            if i in tb_fields:
+                cmd = cmd + '\"%s\" %s, ' %(i, tb_fields[i])    
+
+        cmd = cmd+ " PRIMARY KEY(name));"
+        
         try:
             self.cursor.execute(cmd)
         except:
@@ -37,13 +48,9 @@ class sql(object):
         """Adds entries inside sql db
         """
         
-        order_dict = {1: 'name', 2: 'gda', 3: 'gpa', 4: 'mja', 5: 'mgda', 6: 'mgpa',
-                                 7: 'gdd', 8: 'gpd', 9: 'mjd',10: 'mgdd',11: 'mgpd', 
-                                12: 'va', 13: 'ea', 14: 'ia', 
-                                15: 'vd', 16: 'ed', 17: 'ed'}
-
-
-        if tb not in get_sql_db_table(db = db):
+        tables = get_sql_db_table(db = db)
+       
+        if tb not in tables:
             self.add_table(db, tb, **kwargs)
 
         self.connect(db)
@@ -160,7 +167,7 @@ def py2sql(dict):
     py2sql_dict = {
             'int': 'INT',
             'str': 'VARCHAR(8000)',
-            'float': 'FLOAT(2)',
+            'float': 'FLOAT(4)',
             'unicode': 'VARCHAR(8000)',
             'long': 'BIGINT',
             'bool': 'BIT'
