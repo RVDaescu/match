@@ -1,7 +1,8 @@
 from __future__ import division
 from sql_lib import sql
 from collections import OrderedDict
-import os
+from re import match
+import os, math
 
 def get_files():
 
@@ -26,6 +27,7 @@ def data_big(filename):
     content = file(filename, 'r').readlines()
     data = {}
     header = content.pop(0).split(',')
+    e = 2.71828
 
     for line in content:
         line = [i.strip() for i in line.split(',')]
@@ -79,10 +81,25 @@ def data_big(filename):
         val['mjd'] = val['vd'] + val['ed'] + val['id']
         val['mgdd'] = float(format(val['gdd']/val['mjd'], '.4f'))
         val['mgpd'] = float(format(val['gpd']/val['mjd'], '.4f'))
-        
-        #print key, val
+        val['mjt'] = val['mja']+val['mjd']
+        val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
+        val['fa'] = float(format((val['va']-val['ia'])*100/val['mja'], '.4f'))
+        val['fd'] = float(format((val['vd']-val['id'])*100/val['mjd'], '.4f'))
+        for g in range(1,6):
+            for t in ['gda', 'gpa', 'gdd', 'gpd']:
+                val['p%s%s' %(g,t)] = float(format(e**(-val['m%s' %t])*val['m%s' %t]**g*100/math.factorial(g), '.2f'))
 
-    return data
+    export_list = ['mjt', 'pct', 'fa', 'fd', 'p[1-5]g[d,p][a,d]']
+    export_data = {}
+
+    for key,val in data.items():
+        export_data[key] = {}
+        for k in val:
+            for ex in export_list:
+                if match(ex, k):
+                    export_data[key][k] = data[key][k]
+
+    return export_data
 
 #inter = data_big('data/italia/italia_1_2016.csv')['Milan']
 #for i,j in inter.items():
@@ -92,8 +109,9 @@ for fl in get_files()['big']:
     year = fl.split('_')[-1].rstrip('.csv')
     liga = '_'.join(fl.split('/')[-1].split('_')[:2])
     dt = data_big(fl)
-    if int(year) == 2018:
+    if int(year) <= 2018:
         for k,v in sorted(dt.items()):
             dic = {'name': k}
             dic.update(v)
             sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)
+        print 'Done for %s, %s' %(liga, year)

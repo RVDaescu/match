@@ -15,10 +15,16 @@ class sql(object):
         """adds a table and its header
         """
 
-        order_dict = {1: 'name', 2: 'gda', 3: 'gpa', 4: 'mja', 5: 'mgda', 6: 'mgpa',
-                                 7: 'gdd', 8: 'gpd', 9: 'mjd',10: 'mgdd',11: 'mgpd', 
-                                12: 'va', 13: 'ea', 14: 'ia', 
-                                15: 'vd', 16: 'ed', 17: 'id'}
+        order_dict = {10: 'name', 11: 'mjt', 12: 'pct', 14: 'fa', 17: 'fd',  20: 'gda', 30: 'gpa', 40: 'mja', 50: 'mgda', 60: 'mgpa',
+                                  70: 'gdd', 80: 'gpd', 90: 'mjd',100: 'mgdd',110: 'mgpd', 
+                                 120: 'va', 130: 'ea', 140: 'ia', 150: 'vd',  160: 'ed', 170: 'id'}
+        
+        #adding poisson
+        mx = max(order_dict.keys())
+        events = ['gda', 'gpa', 'gdd', 'gpd']
+        for i in range(1,6):
+            for j in events:
+                order_dict[mx+i*2+events.index(j)*10] = 'p%s%s' %(i,j)
         
         self.connect(db)
         self.cursor = self.con.cursor()
@@ -30,9 +36,9 @@ class sql(object):
         for key in tb_fields:
             if key not in order_dict.values():
                 print 'Column %s is not in order_dict, please added it' %key
-                #return False
+                return False
 
-        for i in order_dict.values():
+        for k, i in sorted(order_dict.items()):
             if i in tb_fields:
                 cmd = cmd + '\"%s\" %s, ' %(i, tb_fields[i])    
 
