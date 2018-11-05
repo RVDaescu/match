@@ -22,7 +22,7 @@ class sql(object):
         #adding poisson
         mx = max(order_dict.keys())
         events = ['gda', 'gpa', 'gdd', 'gpd']
-        for i in range(1,6):
+        for i in range(5):
             for j in events:
                 order_dict[mx+i*2+events.index(j)*10] = 'p%s%s' %(i,j)
         
@@ -43,7 +43,6 @@ class sql(object):
                 cmd = cmd + '\"%s\" %s, ' %(i, tb_fields[i])    
 
         cmd = cmd+ " PRIMARY KEY(name));"
-        
         try:
             self.cursor.execute(cmd)
         except:

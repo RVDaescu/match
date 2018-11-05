@@ -29,34 +29,22 @@ def data_big(filename):
     header = content.pop(0).split(',')
     e = 2.71828
 
-    for line in content:
-        line = [i.strip() for i in line.split(',')]
-        if line[2] not in data.keys():
-            data[line[2]] = {}
-        if 'gda' not in data[line[2]].keys():
-            data[line[2]]['gda'] = 0
-        if 'gpa' not in data[line[2]].keys():
-            data[line[2]]['gpa'] = 0
-        if 'gdd' not in data[line[2]].keys():
-            data[line[2]]['gdd'] = 0
-        if 'gpd' not in data[line[2]].keys():
-            data[line[2]]['gpd'] = 0
-        if 'va' not in data[line[2]].keys():
-            data[line[2]]['va'] = 0
-        if 'ea' not in data[line[2]].keys():
-            data[line[2]]['ea'] = 0
-        if 'ia' not in data[line[2]].keys():
-            data[line[2]]['ia'] = 0
-        if 'vd' not in data[line[2]].keys():
-            data[line[2]]['vd'] = 0
-        if 'ed' not in data[line[2]].keys():
-            data[line[2]]['ed'] = 0
-        if 'id' not in data[line[2]].keys():
-            data[line[2]]['id'] = 0
+    values = ['gda', 'gpa', 'gdd', 'gpd', 'va', 'ea', 'ia', 'vd', 'ed', 'id']
 
     for line in content:
-        line = [i.strip() for i in line.split(',')]
-        
+        line = [l.strip() for l in line.split(',')]
+
+        if line[2] not in data.keys():
+            data[line[2]] = {}
+
+        if line[3] not in data.keys():
+            data[line[3]] = {}
+
+        for val in values:
+            for index in [2,3]:
+                if val not in data[line[index]].keys():
+                    data[line[index]][val] = 0
+
         data[line[2]]['gda'] += int(line[4])
         data[line[2]]['gpa'] += int(line[5])
         data[line[3]]['gdd'] += int(line[5])
@@ -73,23 +61,26 @@ def data_big(filename):
         elif line[4] == line[5]:
             data[line[2]]['ea'] += 1
             data[line[3]]['ed'] += 1
-    
+
     for key,val in data.items():
+
         val['mja'] = val['va'] + val['ea'] + val['ia']
-        val['mgda'] = float(format(val['gda']/val['mja'], '.4f'))
-        val['mgpa'] = float(format(val['gpa']/val['mja'], '.4f'))
+        val['mgda'] = float(format(val['gda']/val['mja'], '.2f'))
+        val['mgpa'] = float(format(val['gpa']/val['mja'], '.2f'))
         val['mjd'] = val['vd'] + val['ed'] + val['id']
-        val['mgdd'] = float(format(val['gdd']/val['mjd'], '.4f'))
-        val['mgpd'] = float(format(val['gpd']/val['mjd'], '.4f'))
+        val['mgdd'] = float(format(val['gdd']/val['mjd'], '.2f'))
+        val['mgpd'] = float(format(val['gpd']/val['mjd'], '.2f'))
         val['mjt'] = val['mja']+val['mjd']
+
         val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
-        val['fa'] = float(format((val['va']-val['ia'])*100/val['mja'], '.4f'))
-        val['fd'] = float(format((val['vd']-val['id'])*100/val['mjd'], '.4f'))
-        for g in range(1,6):
+        val['fa'] = float(format(val['va']-val['ia']*100/val['mja'], '.1f'))
+        val['fd'] = float(format(val['vd']-val['id']*100/val['mjd'], '.1f'))
+
+        for g in range(5):
             for t in ['gda', 'gpa', 'gdd', 'gpd']:
                 val['p%s%s' %(g,t)] = float(format(e**(-val['m%s' %t])*val['m%s' %t]**g*100/math.factorial(g), '.2f'))
 
-    export_list = ['mjt', 'pct', 'fa', 'fd', 'p[1-5]g[d,p][a,d]']
+    export_list = ['mjt', 'pct', 'fa', 'fd', 'p[0-4]g[d,p][a,d]']
     export_data = {}
 
     for key,val in data.items():
@@ -101,17 +92,114 @@ def data_big(filename):
 
     return export_data
 
-#inter = data_big('data/italia/italia_1_2016.csv')['Milan']
+def data_small(filename, year = None):
+
+    content = file(filename, 'r').readlines()
+    data = {}
+    header = content.pop(0).split(',')
+    e = 2.71828
+    
+    replace_dict = {'CS U. Craiova': 'U Craiova 1948 CS',
+                    'Daco-Getica Bucuresti': 'FC Juventus Bucuresti'}
+    values = ['gda', 'gpa', 'gdd', 'gpd', 'va', 'ea', 'ia', 'vd', 'ed', 'id']
+
+    ignore_teams = ['Neustadt', 'Chindia Targoviste', 'UTA Arad']
+
+    for line in content:
+
+        line = [i.strip() for i in line.split(',')]
+        for rk, rv in replace_dict.items():
+            line = [j.replace(rk, rv) for j in line]
+
+        if line[5] not in ignore_teams or line[6] not in ignore_teams:
+            if int(line[2][:4]) == year:
+
+                if line[5] not in data.keys():
+                    data[line[5]] = {}
+
+                if line[6] not in data.keys():
+                    data[line[6]] = {}
+
+                for val in values:
+                    for index in [5,6]:
+                        if val not in data[line[index]].keys():
+                            data[line[index]][val] = 0
+
+                if line[7] == '':
+                    line[7] = 0
+                if line[8] == '':
+                    line[8] = 0
+                data[line[6]]['gda'] += int(line[7])
+                data[line[5]]['gpa'] += int(line[8])
+                data[line[6]]['gdd'] += int(line[8])
+                data[line[6]]['gpd'] += int(line[7])
+
+                if line[7] > line[8]:
+                    data[line[5]]['va'] += 1
+                    data[line[6]]['id'] += 1
+
+                elif line[7] < line[8]:
+                    data[line[5]]['ia'] += 1
+                    data[line[6]]['vd'] += 1
+
+                elif line[7] == line[8]:
+                    data[line[5]]['ea'] += 1
+                    data[line[6]]['ed'] += 1
+
+    for key,val in data.items():
+        
+        val['mja'] = val['va'] + val['ea'] + val['ia']
+        val['mgda'] = float(format(val['gda']/val['mja'], '.2f'))
+        val['mgpa'] = float(format(val['gpa']/val['mja'], '.2f'))
+        val['mjd'] = val['vd'] + val['ed'] + val['id']
+        val['mgdd'] = float(format(val['gdd']/val['mjd'], '.2f'))
+        val['mgpd'] = float(format(val['gpd']/val['mjd'], '.2f'))
+        val['mjt'] = val['mja']+val['mjd']
+        val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
+        val['fa'] = float(format(val['va']-val['ia']*100/val['mja'], '.1f'))
+        val['fd'] = float(format(val['vd']-val['id']*100/val['mjd'], '.1f'))
+
+        for g in range(5):
+            for t in ['gda', 'gpa', 'gdd', 'gpd']:
+                val['p%s%s' %(g,t)] = float(format(e**(-val['m%s' %t])*val['m%s' %t]**g*100/math.factorial(g), '.2f'))
+
+    export_list = ['mjt', 'pct', 'fa', 'fd', 'p[0-4]g[d,p][a,d]']
+    export_data = {}
+
+    for key,val in data.items():
+        export_data[key] = {}
+        for k in val:
+            for ex in export_list:
+                if match(ex, k):
+                    export_data[key][k] = data[key][k]
+
+    return export_data
+
+#inter = data_small('data/romania/romania.csv')
 #for i,j in inter.items():
 #    print "%s: %r" %(i,j)
+
 
 for fl in get_files()['big']:
     year = fl.split('_')[-1].rstrip('.csv')
     liga = '_'.join(fl.split('/')[-1].split('_')[:2])
     dt = data_big(fl)
+    print 'Starting %s %s' %(liga, year)
     if int(year) <= 2018:
         for k,v in sorted(dt.items()):
             dic = {'name': k}
             dic.update(v)
             sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)
-        print 'Done for %s, %s' %(liga, year)
+
+
+for fl in get_files()['small']:
+    years = [2016, 2017, 2018]
+    liga = fl.split('/')[-1].rstrip('.csv')
+    for year in years:
+        dt = data_small(fl, year = year)
+        print 'Starting %s %s' %(liga, year)   
+       
+        for k,v in sorted(dt.items()):
+            dic = {'name': k}
+            dic.update(v)
+            sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)
