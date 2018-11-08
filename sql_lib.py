@@ -15,9 +15,10 @@ class sql(object):
         """adds a table and its header
         """
 
-        order_dict = {10: 'name', 11: 'mjt', 12: 'pct', 14: 'fa', 17: 'fd',  20: 'gda', 30: 'gpa', 40: 'mja', 50: 'mgda', 60: 'mgpa',
-                                  70: 'gdd', 80: 'gpd', 90: 'mjd',100: 'mgdd',110: 'mgpd', 
-                                 120: 'va', 130: 'ea', 140: 'ia', 150: 'vd',  160: 'ed', 170: 'id'}
+        order_dict = {10: 'name', 12: 'mjt', 14: 'pct', 16: 'forta', 18: 'fa', 19: 'fd',  
+                      20: 'gda', 30: 'gpa', 40: 'mja', 50: 'mgda', 60: 'mgpa',
+                      70: 'gdd', 80: 'gpd', 90: 'mjd',100: 'mgdd',110: 'mgpd', 
+                     120: 'va', 130: 'ea', 140: 'ia', 150: 'vd',  160: 'ed', 170: 'id'}
         
         #adding poisson
         mx = max(order_dict.keys())
@@ -43,10 +44,8 @@ class sql(object):
                 cmd = cmd + '\"%s\" %s, ' %(i, tb_fields[i])    
 
         cmd = cmd+ " PRIMARY KEY(name));"
-        try:
-            self.cursor.execute(cmd)
-        except:
-            pass
+        self.cursor.execute(cmd)
+            
         self.con.commit()
 
     def add_value(self, db, tb, **kwargs):
@@ -57,14 +56,17 @@ class sql(object):
        
         if tb not in tables:
             self.add_table(db, tb, **kwargs)
-
+        
         self.connect(db)
         self.cursor = self.con.cursor()
 
         #check if row exists; if yes, update data; if no, add data
-        exists = self.cursor.execute('select name from %s where name = "%s"' \
+        try:
+            exists = self.cursor.execute('select name from %s where name = "%s"' \
                                        %(tb, kwargs['name'])).fetchall()
-        
+        except:
+            exists = False
+
         if not exists:    
             k = v =  ''
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from links import all
 from wget import download
 from time import time
