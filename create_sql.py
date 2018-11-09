@@ -1,8 +1,12 @@
 from __future__ import division
-from sql_lib import sql
-from get_csv import get_file_path
 from re import match
-import os, math
+import math
+
+def poisson(x, mean):
+
+    exp = math.exp(1)
+
+    return float(format(exp**(-mean)*mean**x/math.factorial(x), '.5f'))
 
 def data_p(filename):
     
@@ -89,7 +93,7 @@ def data_p(filename):
 
         for g in range(5):
             for t in ['gda', 'gpa', 'gdd', 'gpd']:
-                val['p%s%s' %(g,t)] = float(format(e**(-val['m%s' %t])*val['m%s' %t]**g*100/math.factorial(g), '.2f'))
+                val['p%s%s' %(g,t)] = poisson(g, val['m%s' %t])*100
 
     export_list = ['mjt', 'pct', 'forta', 'fa', 'fd', 'p[0-4]g[d,p][a,d]']
     export_data = {}
@@ -103,19 +107,3 @@ def data_p(filename):
 
     return export_data
 
-#inter = data_small('data/romania/romania.csv', year = 2017)['Astra']
-#inter['name'] = 'Astra'
-#sql().add_value(db = 'ro.db', tb = 'romania', **inter)
-#for i,j in inter.items():
-#    print "%s: %r" %(i,j)
-
-for fl in get_file_path()['big']:
-    year = fl.split('_')[-1].rstrip('.csv')
-    liga = '_'.join(fl.split('/')[-1].split('_')[:2])
-    print 'Starting %s %s' %(liga, year)
-    dt = data_p(fl)
-    if int(year) <= 2018:
-        for k,v in sorted(dt.items()):
-            dic = {'name': k}
-            dic.update(v)
-            sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)

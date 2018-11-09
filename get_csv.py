@@ -1,8 +1,8 @@
+from __future__ import division
 from links import all
 from wget import download
 from time import time
-import os
-import shutil
+import os, shutil
 
 def get_file_path():
 
@@ -43,7 +43,7 @@ def get_csv():
 
         if isinstance(value, dict):
             for k,v in value.items():
-                if k <= 2018:
+                if k == 2018:
                     output1 = path+country+'/'+key+'_'+str(k)+'.csv'
                     file1 = download(v, out = output1)
                     if os.path.exists(output1):
@@ -56,7 +56,6 @@ def get_csv():
                 shutil.move(file2, output2)
 
     print '\nIt took %.2f seconds to download all files' %(time()-start)
-    return True
 
 def move_small(filename):
 
@@ -111,7 +110,50 @@ def move_small(filename):
 
     return True
 
-get_csv()
+def d_check(filename):
 
-for fl in get_file_path()['small']:
-    move_small(fl)
+    content = file(filename, 'r').readlines()
+    content.pop(0)
+    
+    ga = gd = m = 0
+    ga0 = ga1 = ga2 = ga3 = ga4 = 0
+    gd0 = gd1 = gd2 = gd3 = gd4 = 0
+    for line in content:
+        
+        line = [l.strip() for l in line.split(',')]
+        ga += int(line[4])
+        gd += int(line[5])
+        m += 1
+        
+        if int(line[4]) == 0:
+            ga0 += 1
+        elif int(line[4]) == 1:
+            ga1 += 1
+        elif int(line[4]) == 2:
+            ga2 += 1
+        elif int(line[4]) == 3:
+            ga3 += 1
+        elif int(line[4]) == 4:
+            ga4 += 1
+        if int(line[5]) == 0:
+            gd0 += 1
+        elif int(line[5]) == 1:
+            gd1 += 1
+        elif int(line[5]) == 2:
+            gd2 += 1
+        elif int(line[5]) == 3:
+            gd3 += 1
+        elif int(line[5]) == 4:
+            gd4 += 1
+
+    mga = ga/m   
+    mgd = gd/m
+
+    return_dict = {}
+    return_dict['mga'] = float(format(mga, '.4f'))
+    return_dict['mgd'] = float(format(mgd, '.4f'))
+    for i in range(5):
+        for j in ['ga', 'gd']:
+            return_dict['%s%s' %(j,i)] = locals()['%s%s' %(j,i)]
+    
+    return return_dict
