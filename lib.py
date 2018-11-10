@@ -2,7 +2,7 @@ from __future__ import division
 from links import all
 from wget import download
 from time import time
-import os, shutil
+import os, shutil, math
 
 def get_file_path():
 
@@ -55,9 +55,9 @@ def get_csv():
             if os.path.exists(output2):
                 shutil.move(file2, output2)
 
-    print '\nIt took %.2f seconds to download all files' %(time()-start)
+    print '\nIt took %.1f seconds to download all files' %(time()-start)
 
-def move_small(filename):
+def recreate_small(filename):
 
     content = open(filename, 'r').readlines()
     content.pop(0)
@@ -110,7 +110,7 @@ def move_small(filename):
 
     return True
 
-def d_check(filename):
+def analiza(filename):
 
     content = file(filename, 'r').readlines()
     content.pop(0)
@@ -119,8 +119,13 @@ def d_check(filename):
     ga0 = ga1 = ga2 = ga3 = ga4 = 0
     gd0 = gd1 = gd2 = gd3 = gd4 = 0
     for line in content:
-        
+
         line = [l.strip() for l in line.split(',')]
+        
+        if line[4] == '':
+            line[4] = 0
+            line[5] = 0
+
         ga += int(line[4])
         gd += int(line[5])
         m += 1
@@ -150,10 +155,35 @@ def d_check(filename):
     mgd = gd/m
 
     return_dict = {}
-    return_dict['mga'] = float(format(mga, '.4f'))
-    return_dict['mgd'] = float(format(mgd, '.4f'))
+    return_dict['nume'] = filename.split('/')[-1].rstrip('.csv')
+    #return_dict['mga'] = float(format(mga, '.4f'))
+    #return_dict['mgd'] = float(format(mgd, '.4f'))
+    return_dict['m'] = m
     for i in range(5):
         for j in ['ga', 'gd']:
-            return_dict['%s%s' %(j,i)] = locals()['%s%s' %(j,i)]
-    
+            return_dict['%s%s' %(j,i)] = float(format(locals()['%s%s' %(j,i)]/m*100, '.2f'))
+            return_dict['p%s%s' %(i,j)] = float(format(poisson(i, locals()['m%s' %j])*100, '.2f'))
+
     return return_dict
+
+def analiza_csv():
+    f = open('analiza.csv', 'w')
+    
+    for filename in get_file_path()['big']:
+        a = analiza(filename)
+
+        f.write("%s,Meciuri:,%s,,,,,\r\n" %(a['nume'], a['m']))
+        f.write("G,PA,A,dA,PD,D,dD\r\n")
+        for i in range(5):
+            f.write("%s,%s,%s,%s,%s,%s,%s\r\n" %(i, a['p%sga' %i], a['ga%s' %i], a['ga%s' %i] - a['p%sga' %i],
+                                                    a['p%sgd' %i], a['gd%s' %i], a['gd%s' %i] - a['p%sgd' %i]))
+
+        f.write(",,,,,,\r\n")
+    f.close()
+
+def poisson(x, mean):
+
+    exp = math.exp(1)
+    
+    return float(format(exp**(-mean)*mean**x/math.factorial(x), '.5f'))
+

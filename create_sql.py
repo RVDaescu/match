@@ -1,12 +1,6 @@
 from __future__ import division
+from lib import poisson
 from re import match
-import math
-
-def poisson(x, mean):
-
-    exp = math.exp(1)
-
-    return float(format(exp**(-mean)*mean**x/math.factorial(x), '.5f'))
 
 def data_p(filename):
     
@@ -84,7 +78,7 @@ def data_p(filename):
         val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
         val['fa'] = float(format((val['va']-val['ia'])*100/val['mja'], '.1f'))
         val['fd'] = float(format((val['vd']-val['id'])*100/val['mjd'], '.1f'))
-        val['mdate'] = sorted(val['mdate'], reverse = True)[:10]
+        val['mdate'] = sorted(val['mdate'], reverse = True)[:5]
         val['istoric'] = ''.join([i[-2:] for i in val['mdate']])
         val['forta'] = 100
         

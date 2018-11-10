@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from create_sql import data_p
-from get_csv import get_file_path, get_csv
+from lib import get_file_path, get_csv
 from sql_lib import sql
 
 #get_csv()
 
 #for fl in get_file_path()['small']:
-#    move_small(fl)
+#    recreate_small(fl)
 
 for fl in get_file_path()['big']:
     year = fl.split('_')[-1].rstrip('.csv')
@@ -19,4 +19,3 @@ for fl in get_file_path()['big']:
             dic = {'name': k}
             dic.update(v)
             sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)
-
