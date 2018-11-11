@@ -18,7 +18,7 @@ def get_file_path():
             if f.endswith('csv') and '_' in f:
                 csv_1.append(root + '/' + f)
 
-            elif f.endswith('csv') and '_' not in f:
+            elif f.endswith('csv') and '_' not in f and 'analiza' not in f:
                 csv_2.append(root + '/' + f)
 
     data = {'big': csv_1, 'small': csv_2}
@@ -45,7 +45,7 @@ def get_csv():
 
         if isinstance(value, dict):
             for k,v in value.items():
-                if k == 2018:
+                if k <= 2018:
                     output1 = path+country+'/'+key+'_'+str(k)+'.csv'
                     file1 = download(v, out = output1)
                     if os.path.exists(output1):
@@ -60,7 +60,7 @@ def get_csv():
     print '\nIt took %.1f seconds to download all files' %(time()-start)
 
 def recreate_small(filename):
-
+    
     content = open(filename, 'r').readlines()
     content.pop(0)
     header = 'Div,Date,HomeTeam,AwayTeam,FTHG,FTAG\r\n'
@@ -121,7 +121,7 @@ def analiza(filename):
     ga0 = ga1 = ga2 = ga3 = ga4 = 0
     gd0 = gd1 = gd2 = gd3 = gd4 = 0
     for line in content:
-
+        
         line = [l.strip() for l in line.split(',')]
         
         if line[4] == '':
