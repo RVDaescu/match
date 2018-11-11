@@ -15,7 +15,7 @@ class sql(object):
         """adds a table and its header
         """
 
-        order_dict = {10: 'name', 12: 'mjt', 14: 'pct', 16: 'forta', 18: 'fa', 19: 'fd',  
+        order_dict = {1: 'name', 4:'sdgd', 5:'sdga', 12: 'mjt', 14: 'pct', 16: 'forta', 18: 'fa', 19: 'fd',  
                       20: 'gda', 30: 'gpa', 40: 'mja', 50: 'mgda', 60: 'mgpa',
                       70: 'gdd', 80: 'gpd', 90: 'mjd',100: 'mgdd',110: 'mgpd', 
                      120: 'va', 130: 'ea', 140: 'ia', 150: 'vd',  160: 'ed', 170: 'id'}
@@ -32,7 +32,7 @@ class sql(object):
 
         tb_fields = py2sql(kwargs)
 
-        cmd = "CREATE TABLE %s (" %tb
+        cmd = "CREATE TABLE \"%s\" (" %tb
 
         for key in tb_fields:
             if key not in order_dict.values():
@@ -62,11 +62,10 @@ class sql(object):
 
         #check if row exists; if yes, update data; if no, add data
         try:
-            exists = self.cursor.execute('select name from %s where name = "%s"' \
-                                       %(tb, kwargs['name'])).fetchall()
+            exists = self.cursor.execute('select name from \"%s\" where name = "%s"' \
+                                        %(tb, kwargs['name'])).fetchall()
         except:
             exists = False
-
         if not exists:    
             k = v =  ''
 
@@ -77,7 +76,7 @@ class sql(object):
             k = k.replace('', '')[:-2]
             v = v.replace('', '')[:-2]
 
-            cmd = 'INSERT INTO %s (%s) VALUES (%s);' %(tb, k, v)
+            cmd = 'INSERT INTO \"%s\" (%s) VALUES (%s);' %(tb, k, v)
 
             self.cursor.execute(cmd)
             self.con.commit()
@@ -86,7 +85,7 @@ class sql(object):
         
         else:
             update = wh = ''
-            cmd = 'update %s set ' %tb
+            cmd = 'update \"%s\" set ' %tb
             for key, val in kwargs.items():
                 if key != 'name':
                     update = update + '%s = %s, ' %(key, val)

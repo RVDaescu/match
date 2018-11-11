@@ -64,7 +64,7 @@ def data_p(filename):
             data[line[3]]['ed'] += 1
             data[line[2]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '+0')
             data[line[3]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '+1')
-
+    
     for key,val in data.items():
 
         val['mja'] = val['va'] + val['ea'] + val['ia']
@@ -78,16 +78,16 @@ def data_p(filename):
         val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
         val['fa'] = float(format((val['va']-val['ia'])*100/val['mja'], '.1f'))
         val['fd'] = float(format((val['vd']-val['id'])*100/val['mjd'], '.1f'))
-        val['mdate'] = sorted(val['mdate'], reverse = True)[:5]
+        val['mdate'] = sorted(val['mdate'], reverse = True)[:10]
         val['istoric'] = ''.join([i[-2:] for i in val['mdate']])
-        val['forta'] = 100
+        val['forta'] = 1
         
-        for i in range(0, 8, 2):
-            val['forta'] += int(val['istoric'][i:i+2])
-
+        for i in range(0, 10, 2):
+            val['forta'] +=int(val['istoric'][i:i+2])/100
+        
         for g in range(5):
             for t in ['gda', 'gpa', 'gdd', 'gpd']:
-                val['p%s%s' %(g,t)] = poisson(g, val['m%s' %t])*100
+                val['p%s%s' %(g,t)] = float(format(poisson(g, val['m%s' %t])*100, '.3f'))
 
     export_list = ['mjt', 'pct', 'forta', 'fa', 'fd', 'p[0-4]g[d,p][a,d]']
     export_data = {}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from create_sql import data_p
-from lib import get_file_path, get_csv
+from lib import *
 from sql_lib import sql
 
 #get_csv()
@@ -9,6 +9,11 @@ from sql_lib import sql
 #for fl in get_file_path()['small']:
 #    recreate_small(fl)
 
+analiza_csv()
+    
+analiza_sql()
+
+"""
 for fl in get_file_path()['big']:
     year = fl.split('_')[-1].rstrip('.csv')
     liga = '_'.join(fl.split('/')[-1].split('_')[:2])
@@ -19,3 +24,4 @@ for fl in get_file_path()['big']:
             dic = {'name': k}
             dic.update(v)
             sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)
+"""

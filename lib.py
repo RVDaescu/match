@@ -1,7 +1,9 @@
 from __future__ import division
+from sql_lib import sql
 from links import all
 from wget import download
 from time import time
+from statistics import pstdev
 import os, shutil, math
 
 def get_file_path():
@@ -159,15 +161,26 @@ def analiza(filename):
     #return_dict['mga'] = float(format(mga, '.4f'))
     #return_dict['mgd'] = float(format(mgd, '.4f'))
     return_dict['m'] = m
+
+    return_dict['sga'] = []
+    return_dict['sgd'] = []
+
     for i in range(5):
         for j in ['ga', 'gd']:
             return_dict['%s%s' %(j,i)] = float(format(locals()['%s%s' %(j,i)]/m*100, '.2f'))
             return_dict['p%s%s' %(i,j)] = float(format(poisson(i, locals()['m%s' %j])*100, '.2f'))
+    
+    for i in range(5):
+        return_dict['sga'].append(float(format(return_dict['ga%s' %i] - return_dict['p%sga' %i], '.2f')))
+        return_dict['sgd'].append(float(format(return_dict['gd%s' %i] - return_dict['p%sgd' %i], '.2f')))
+    
+    return_dict['sdga'] = pstdev(return_dict['sga'])
+    return_dict['sdgd'] = pstdev(return_dict['sgd'])
 
     return return_dict
 
 def analiza_csv():
-    f = open('analiza.csv', 'w')
+    f = open('data/analiza.csv', 'w')
     
     for filename in get_file_path()['big']:
         a = analiza(filename)
@@ -175,11 +188,29 @@ def analiza_csv():
         f.write("%s,Meciuri:,%s,,,,,\r\n" %(a['nume'], a['m']))
         f.write("G,PA,A,dA,PD,D,dD\r\n")
         for i in range(5):
-            f.write("%s,%s,%s,%s,%s,%s,%s\r\n" %(i, a['p%sga' %i], a['ga%s' %i], a['ga%s' %i] - a['p%sga' %i],
-                                                    a['p%sgd' %i], a['gd%s' %i], a['gd%s' %i] - a['p%sgd' %i]))
+            f.write("%s,%s,%s,%s,%s,%s,%s\r\n" %(i, a['p%sga' %i], a['ga%s' %i], 
+                                                    a['ga%s' %i] - a['p%sga' %i],
+                                                    a['p%sgd' %i], a['gd%s' %i], 
+                                                    a['gd%s' %i] - a['p%sgd' %i]))
 
         f.write(",,,,,,\r\n")
     f.close()
+
+def analiza_sql(db = None):
+
+    db = 'data/analiza.db' if db is None else db
+    
+    for filename in get_file_path()['big']:
+        
+        tb = filename[-8:-4]
+        data = analiza(filename)
+        
+        sql_data = {}
+        sql_data['name'] = data['nume'][:-5]
+        sql_data['sdga'] = float(format(data['sdga'], '.3f'))
+        sql_data['sdgd'] = float(format(data['sdgd'], '.3f'))
+        
+        sql().add_value(db = db, tb = tb, **sql_data)
 
 def poisson(x, mean):
 
