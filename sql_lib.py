@@ -136,13 +136,12 @@ class sql(object):
         cmd = 'SELECT %s from %s%s;' %(field, tb, where)
 
         data = self.cursor.execute(cmd).fetchall()
-
+        self.close()
+        
         if value:
             return str(data[0][0])
         else:
             return [i[0] for i in data]
-
-        self.close()
 
     def get_row(self, db, tb, lookup):
         """
@@ -152,14 +151,26 @@ class sql(object):
         self.connect(db)
         self.cursor = self.con.cursor()
 
-        cmd = "SELECT * from %s WHERE IP = \"%s\"" %(tb, lookup)
-        data = self.cursor.execute(cmd).fetchall()
-    
+        cmd = "SELECT * from %s WHERE name = \"%s\"" %(tb, lookup)
+        
+        try:
+            data = self.cursor.execute(cmd).fetchall()
+        except:
+            return False
+
         header = [i[0] for i in self.cursor.execute(cmd).description]
         header = dict(zip(header, range(0,(len(header)))))
-        return [header] + data
+        
+        if data:
+            return_dict = {}
 
-        self.close()
+            for i,j in header.items():
+                return_dict[i] = data[0][j]
+            
+            self.close()
+            return return_dict
+        else:
+            return False
 
     def close(self):
         
