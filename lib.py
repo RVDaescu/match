@@ -1,5 +1,5 @@
 from __future__ import division
-from sql_lib import sql
+from sql_lib import sql, get_sql_db_table
 from links import all
 from wget import download
 from time import time
@@ -84,7 +84,7 @@ def recreate_small(filename):
    
     for line in content:
         line = [l.strip() for l in line.split(',')]
-        
+
         if line[2][:4] == '2018':
             f2018.write('%s,%s,%s,%s,%s,%s\r\n' %(line[1], line[3], line[5], line[6], line[7], line[8]))
         elif line[2][:4] == '2017':
@@ -212,9 +212,22 @@ def analiza_sql(db = None):
         
         sql().add_value(db = db, tb = tb, **sql_data)
 
+def get_league(echipa, an):
+
+    ani = 'data/all_%s.db' %an
+    if not os.path.isfile(ani):
+        print '%s nu exista' %ani
+        return False
+
+    tari = get_sql_db_table(db = ani)
+    for tara in tari:
+        echipe = sql().get_data(db = ani, tb = tara, field = 'name')
+        for ech in echipe[1:]:
+            if echipa == ech[0]:
+                return tara
+
 def poisson(x, mean):
 
     exp = math.exp(1)
     
     return float(format(exp**(-mean)*mean**x/math.factorial(x), '.5f'))
-
