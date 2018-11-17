@@ -6,21 +6,6 @@ from links import *
 from sql_lib import *
 import os
 
-
-def get_league(echipa, an):
-
-    ani = 'data/all_%s.db' %an
-    if not os.path.isfile(ani): 
-        print '%s nu exista' %ani
-        return False
-    
-    tari = get_sql_db_table(db = ani)
-    for tara in tari:
-        echipe = sql().get_data(db = ani, tb = tara, field = 'name')
-        for ech in echipe[1:]:
-            if echipa == ech[0]:
-                return tara
-
 def prognoza(e1 = None, e2 = None, an = 2016):
     
     liga_e1 = get_league(e1, an = an)
