@@ -7,11 +7,10 @@ from sql_lib import *
 from compare import *
 import os
 
-
 for fl in get_file_path()['big']:
     year = fl.split('_')[-1].rstrip('.csv')
     liga = '_'.join(fl.split('/')[-1].split('_')[:2])
     print 'Starting %s %s' %(liga, year)
     dt = match_to_match(fl)
 
-
+#match_to_match('data/germania/germania_2_2016.csv')

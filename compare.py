@@ -1,5 +1,6 @@
 from __future__ import division
 from lib import poisson
+from sql_lib import sql
 from re import match
 
 def match_to_match(filename):
@@ -9,16 +10,26 @@ def match_to_match(filename):
     content.pop(0)
     e = 2.71828
 
+    tara = '_'.join(filename.split('/')[-1].split('_')[:2])
+    an =  filename.split('/')[-1].split('_')[-1].rstrip('.csv')
+    
     replace_dict = {'CS U. Craiova': 'U Craiova 1948 CS',
                     'Daco-Getica Bucuresti': 'FC Juventus Bucuresti',
                     'FC Viitorul': 'Viitorul Constanta'}
     values = ['gda', 'gpa', 'gdd', 'gpd', 'va', 'ea', 'ia', 'vd', 'ed', 'id']
     ignore_teams = ['Neustadt', 'Chindia Targoviste', 'UTA Arad']
  
-    fl = open('comp/res_%s' %(filename.split('/')[-1]), 'w')
+    fl = open('results/res_%s' %(filename.split('/')[-1]), 'w')
+    fl.write('meci,procent,scor,,,victorie,,,amb. marc,,,peste 2_5,,\r\n')
     
-    fl.write('meci,procent,scor,,victorie,,amb. marc,,peste 2_5,\r\n')
-    
+    tara_res = {}
+    tara_res['name'] = tara
+    tara_res['scor'] = 0
+    tara_res['v'] = 0
+    tara_res['am'] = 0
+    tara_res['p2_5'] = 0
+    tara_res['tot'] = 0
+
     for line in content:
         line = [l.strip() for l in line.split(',')]
         
@@ -72,12 +83,7 @@ def match_to_match(filename):
         if len(data[line[2]]['mdate']) >= 10 and len(data[line[3]]['mdate']) >= 10:
             for key,val in data.items():
                 val['mja'] = val['va'] + val['ea'] + val['ia']
-                try:
-                    val['mgda'] = float(format(val['gda']/val['mja'], '.2f'))
-                except:
-                    print val['mja']
-                    print filename, line[2], line[3], data[line[2]]['mja'], data[line[3]]['mja']
-
+                val['mgda'] = float(format(val['gda']/val['mja'], '.2f'))
                 val['mgpa'] = float(format(val['gpa']/val['mja'], '.2f'))
                 val['mjd'] = val['vd'] + val['ed'] + val['id']
                 val['mgdd'] = float(format(val['gdd']/val['mjd'], '.2f'))
@@ -178,9 +184,35 @@ def match_to_match(filename):
                 pam = 'nu'
             else:
                 pam = 'da'
-
+                
             pscor = probs.keys()[probs.values().index(max(probs.values()))]
             
-            fl.write('%s-%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n'
-                    %(line[2], line[3], sums, scor, pscor, 
-                      v, pv, am, pam, p2_5, pp2_5))
+            if scor == pscor:
+                tara_res['scor'] += 1
+                tara_res['tot'] += 1
+            else:
+                tara_res['tot'] += 1
+
+            if v == pv:
+                tara_res['v'] += 1
+
+            if am == pam:
+                tara_res['am'] += 1
+
+            if p2_5 == pp2_5:
+                tara_res['p2_5'] += 1
+
+
+            fl.write('%s-%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n'
+                    %(line[2], line[3], sums, scor, pscor, scor == pscor,
+                      v, pv, v==pv, am, pam, am==pam, p2_5, pp2_5,p2_5==pp2_5))
+
+    if an < 2018:
+        tara_res['scor'] = float(format(tara_res['scor']/tara_res['tot']*100, '.1f'))
+        tara_res['v'] = float(format(tara_res['v']/tara_res['tot']*100, '.1f'))
+        tara_res['am'] = float(format(tara_res['am']/tara_res['tot']*100, '.1f'))
+        tara_res['p2_5'] = float(format(tara_res['p2_5']/tara_res['tot']*100, '.1f'))
+    
+        sql().add_value(db = 'results/all_res_done.db' , tb = 'all_%s' %an, **tara_res)
+
+    print tara_res
