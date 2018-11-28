@@ -42,10 +42,12 @@ def match_to_match(filename):
         if line[2] not in data.keys():
             data[line[2]] = {}
             data[line[2]]['mdate'] = []
-            
+            data[line[2]]['mjt'] = 0
+
         if line[3] not in data.keys():
             data[line[3]] = {}
             data[line[3]]['mdate'] = []
+            data[line[3]]['mjt'] = 0
 
         for val in values:
             for index in [2,3]:
@@ -65,22 +67,40 @@ def match_to_match(filename):
         if line[4] > line[5]:
             data[line[2]]['va'] += 1
             data[line[3]]['id'] += 1
+            data[line[2]]['mjt'] += 1
+            data[line[3]]['mjt'] += 1
             data[line[2]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '+2')
             data[line[3]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '-2')
 
         elif line[4] < line[5]:
             data[line[2]]['ia'] += 1
             data[line[3]]['vd'] += 1
+            data[line[2]]['mjt'] += 1
+            data[line[3]]['mjt'] += 1
             data[line[2]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '-3')
             data[line[3]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '+3')
 
         else:
             data[line[2]]['ea'] += 1
             data[line[3]]['ed'] += 1
+            data[line[2]]['mjt'] += 1
+            data[line[3]]['mjt'] += 1           
             data[line[2]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '+0')
             data[line[3]]['mdate' ].append(''.join(line[1].split('/')[::-1]) + '+1')
-    
-        if len(data[line[2]]['mdate']) >= 10 and len(data[line[3]]['mdate']) >= 10:
+        
+        data[line[2]]['scor'] = 0
+        data[line[2]]['v'] = 0
+        data[line[2]]['am'] = 0
+        data[line[2]]['p2_5'] = 0
+        data[line[2]]['tot'] = 0
+
+        data[line[3]]['scor'] = 0
+        data[line[3]]['v'] = 0
+        data[line[3]]['am'] = 0
+        data[line[3]]['p2_5'] = 0
+        data[line[3]]['tot'] = 0
+
+        if data[line[2]]['mjt'] >= 10 and data[line[3]]['mjt'] >= 10:
             for key,val in data.items():
                 val['mja'] = val['va'] + val['ea'] + val['ia']
                 val['mgda'] = float(format(val['gda']/val['mja'], '.2f'))
@@ -88,7 +108,6 @@ def match_to_match(filename):
                 val['mjd'] = val['vd'] + val['ed'] + val['id']
                 val['mgdd'] = float(format(val['gdd']/val['mjd'], '.2f'))
                 val['mgpd'] = float(format(val['gpd']/val['mjd'], '.2f'))
-                val['mjt'] = val['mja']+val['mjd']
 
                 val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
                 val['fa'] = float(format((val['va']-val['ia'])*100/val['mja'], '.1f'))
@@ -127,92 +146,101 @@ def match_to_match(filename):
             sums = 0
             for i in range(5):
                 for j in range(5):
-                    probs['%s-%s' %(i,j)] = float(format((data[line[2]]['p%sgda' %i] * data[line[3]]['p%sgdd' %j])/100, '.2f'))
+                    #fa = data[line[2]]['forta']
+                    #fd = data[line[3]]['forta']
+                    fa = 1
+                    fd = 1
+                    probs['%s-%s' %(i,j)] = float(format((fa*data[line[2]]['p%sgda' %i] * \
+                                                          fd*data[line[3]]['p%sgdd' %j])/100, '.2f'))
                     sums += probs['%s-%s' %(i,j)]
             
-            pp2_5 = 0
-            pva = 0
-            pe = 0
-            pvd = 0
-            pam = 0
-            pdm = 0
+            if sums >= 95:
+                pp2_5 = 0
+                pva = 0
+                pe = 0
+                pvd = 0
+                pam = 0
+                pdm = 0
 
-            for i in range(5):
-                for j in range(5):
-                    if i + j > 2.5:
-                        pp2_5 += probs['%s-%s' %(i,j)]
+                for i in range(5):
+                    for j in range(5):
+                        if i + j > 2.5:
+                            pp2_5 += probs['%s-%s' %(i,j)]
 
-                    if i > j:
-                        pva += probs['%s-%s' %(i,j)]
-                    elif i < j:
-                        pvd += probs['%s-%s' %(i,j)]
-                    else:
-                        pe += probs['%s-%s' %(i,j)]
-                    
-                    if i == 0 and j == 0:
-                        pam += probs['%s-%s' %(i,j)]
-                        pdm += probs['%s-%s' %(i,j)]
-                    elif i == 0 and j != 0:
-                        pam += probs['%s-%s' %(i,j)]
-                    elif i != 0 and j == 0:
-                        pdm += probs['%s-%s' %(i,j)]
-            
-            string = '\t0\t1\t2\t3\t4\n'
-            for i in range(5):
-                for j in range(5):
-                    if j == 0:
-                        string += '%s\t' %i + str(probs['%s-%s' %(i,j)])+'\t'
-                    elif j > 0 and j < 4:
-                        string += str(probs['%s-%s' %(i,j)])+'\t'
-                    elif j == 4:
-                        string += str(probs['%s-%s' %(i,j)])+'\n'
-            #print string
-
-            if pp2_5*2 >= sums:
-                pp2_5 = 'da'
-            else:
-                pp2_5 = 'nu'
-
-            if pva >= pe and pva >= pvd:
-                pv = 'va'
-            elif pe > pva and pe > pvd:
-                pv = 'e'
-            elif pvd > pva and pvd > pe:
-                pv = 'vd'
-            
-            if pam*2 < sums or pdm*2 < sums:
-                pam = 'nu'
-            else:
-                pam = 'da'
+                        if i > j:
+                            pva += probs['%s-%s' %(i,j)]
+                        elif i < j:
+                            pvd += probs['%s-%s' %(i,j)]
+                        else:
+                            pe += probs['%s-%s' %(i,j)]
+                        
+                        if i == 0 and j == 0:
+                            pam += probs['%s-%s' %(i,j)]
+                            pdm += probs['%s-%s' %(i,j)]
+                        elif i == 0 and j != 0:
+                            pam += probs['%s-%s' %(i,j)]
+                        elif i != 0 and j == 0:
+                            pdm += probs['%s-%s' %(i,j)]
                 
-            pscor = probs.keys()[probs.values().index(max(probs.values()))]
-            
-            if scor == pscor:
-                tara_res['scor'] += 1
-                tara_res['tot'] += 1
-            else:
-                tara_res['tot'] += 1
+                string = '\t0\t1\t2\t3\t4\n'
+                for i in range(5):
+                    for j in range(5):
+                        if j == 0:
+                            string += '%s\t' %i + str(probs['%s-%s' %(i,j)])+'\t'
+                        elif j > 0 and j < 4:
+                            string += str(probs['%s-%s' %(i,j)])+'\t'
+                        elif j == 4:
+                            string += str(probs['%s-%s' %(i,j)])+'\n'
+                #print string
 
-            if v == pv:
-                tara_res['v'] += 1
+                if pp2_5*2 >= sums:
+                    pp2_5 = 'da'
+                else:
+                    pp2_5 = 'nu'
 
-            if am == pam:
-                tara_res['am'] += 1
+                if pva >= pe and pva >= pvd:
+                    pv = 'va'
+                elif pe > pva and pe > pvd:
+                    pv = 'e'
+                elif pvd > pva and pvd > pe:
+                    pv = 'vd'
+                
+                if pam*2 < sums or pdm*2 < sums:
+                    pam = 'nu'
+                else:
+                    pam = 'da'
+                    
+                pscor = probs.keys()[probs.values().index(max(probs.values()))]
+                
+                if scor == pscor:
+                    tara_res['scor'] += 1
+                    tara_res['tot'] += 1
+                else:
+                    tara_res['tot'] += 1
 
-            if p2_5 == pp2_5:
-                tara_res['p2_5'] += 1
+                if v == pv:
+                    tara_res['v'] += 1
+
+                if am == pam:
+                    tara_res['am'] += 1
+
+                if p2_5 == pp2_5:
+                    tara_res['p2_5'] += 1
 
 
-            fl.write('%s-%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n'
-                    %(line[2], line[3], sums, scor, pscor, scor == pscor,
-                      v, pv, v==pv, am, pam, am==pam, p2_5, pp2_5,p2_5==pp2_5))
+                fl.write('%s-%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\r\n'
+                        %(line[2], line[3], sums, scor, pscor, 
+                          1 if scor == pscor else 0, 
+                          v, pv, 1 if v==pv else 0, am, pam, 
+                          1 if am==pam else 0, p2_5, pp2_5,
+                          1 if p2_5==pp2_5 else 0))
 
-    if an < 2018:
+    if int(an) < 2018:
         tara_res['scor'] = float(format(tara_res['scor']/tara_res['tot']*100, '.1f'))
         tara_res['v'] = float(format(tara_res['v']/tara_res['tot']*100, '.1f'))
         tara_res['am'] = float(format(tara_res['am']/tara_res['tot']*100, '.1f'))
         tara_res['p2_5'] = float(format(tara_res['p2_5']/tara_res['tot']*100, '.1f'))
     
-        sql().add_value(db = 'results/all_res_done.db' , tb = 'all_%s' %an, **tara_res)
+        sql().add_value(db = 'results/all_res_o95.db' , tb = 'all_%s' %an, **tara_res)
 
-    print tara_res
+    #print tara_res

@@ -67,6 +67,7 @@ class sql(object):
                                         %(tb, kwargs['name'])).fetchall()
         except:
             exists = False
+        
         if not exists:    
             k = v =  ''
 
@@ -81,7 +82,6 @@ class sql(object):
 
             self.cursor.execute(cmd)
             self.con.commit()
-
             self.close()
         
         else:
@@ -96,7 +96,6 @@ class sql(object):
             
             self.cursor.execute(cmd)
             self.con.commit()
-            
             self.close()
 
     def get_data(self, db, tb, field = '*'):
