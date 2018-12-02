@@ -45,7 +45,7 @@ def get_csv():
 
         if isinstance(value, dict):
             for k,v in value.items():
-                if k >= 2018:
+                if k > 2010:
                     output1 = path+country+'/'+key+'_'+str(k)+'.csv'
                     file1 = download(v, out = output1)
                     if os.path.exists(output1):
@@ -70,11 +70,11 @@ def recreate_small(filename):
     f2012.write(header)
     f2013 = open(filename.replace('.csv', '_1_2013.csv'), 'w')
     f2013.write(header)
+    """
     f2014 = open(filename.replace('.csv', '_1_2014.csv'), 'w')
     f2014.write(header)
     f2015 = open(filename.replace('.csv', '_1_2015.csv'), 'w')
     f2015.write(header)
-    """
     f2016 = open(filename.replace('.csv', '_1_2016.csv'), 'w')
     f2016.write(header)
     f2017 = open(filename.replace('.csv', '_1_2017.csv'), 'w')
@@ -91,11 +91,11 @@ def recreate_small(filename):
             f2017.write('%s,%s,%s,%s,%s,%s\r\n' %(line[1], line[3], line[5], line[6], line[7], line[8]))
         elif line[2][:4] == '2016':
             f2016.write('%s,%s,%s,%s,%s,%s\r\n' %(line[1], line[3], line[5], line[6], line[7], line[8]))
-        """
         elif line[2][:4] == '2015':
             f2015.write('%s,%s,%s,%s,%s,%s\r\n' %(line[1], line[3], line[5], line[6], line[7], line[8]))
         elif line[2][:4] == '2014':
             f2014.write('%s,%s,%s,%s,%s,%s\r\n' %(line[1], line[3], line[5], line[6], line[7], line[8]))
+        """
         elif line[2][:4] == '2013':
             f2013.write('%s,%s,%s,%s,%s,%s\r\n' %(line[1], line[3], line[5], line[6], line[7], line[8]))
         elif line[2][:4] == '2012':
@@ -103,9 +103,9 @@ def recreate_small(filename):
     
     f2012.close()
     f2013.close()
+    """
     f2014.close()
     f2015.close()
-    """
     f2016.close()
     f2017.close()
     f2018.close()

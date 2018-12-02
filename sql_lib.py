@@ -19,7 +19,7 @@ class sql(object):
                       20: 'gda', 30: 'gpa', 40: 'mja', 50: 'mgda', 60: 'mgpa',
                       70: 'gdd', 80: 'gpd', 90: 'mjd',100: 'mgdd',110: 'mgpd', 
                      120: 'va', 130: 'ea', 140: 'ia', 150: 'vd',  160: 'ed', 170: 'id',
-                     124: 'am', 125: 'tot', 122: 'v', 121 : 'scor', 123: 'p2_5'}
+                     124: 'amm', 125: 'tot', 122: 'v', 121 : 'scor', 123: 'p2_5'}
         
         #adding poisson
         mx = max(order_dict.keys())

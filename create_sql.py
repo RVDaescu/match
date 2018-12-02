@@ -11,7 +11,8 @@ def data_p(filename):
 
     replace_dict = {'CS U. Craiova': 'U Craiova 1948 CS',
                     'Daco-Getica Bucuresti': 'FC Juventus Bucuresti',
-                    'FC Viitorul': 'Viitorul Constanta'}
+                    'FC Viitorul': 'Viitorul Constanta',
+                    'AthBilbao B': 'Ath Bilbao B'}
     values = ['gda', 'gpa', 'gdd', 'gpd', 'va', 'ea', 'ia', 'vd', 'ed', 'id']
     ignore_teams = ['Neustadt', 'Chindia Targoviste', 'UTA Arad']
 
@@ -21,7 +22,7 @@ def data_p(filename):
         for rk, rv in replace_dict.items():
             line = [j.replace(rk, rv) for j in line]
 
-        if line[2] in ignore_teams or line[3] in ignore_teams:
+        if line[2] in ignore_teams or line[3] in ignore_teams or line[2] == '' or line[3] == '':
             break
 
         if line[2] not in data.keys():
@@ -78,13 +79,14 @@ def data_p(filename):
         val['pct'] = (val['va'] + val['vd'])*3 + (val['ea'] + val['ed'])*1
         val['fa'] = float(format((val['va']-val['ia'])*100/val['mja'], '.1f'))
         val['fd'] = float(format((val['vd']-val['id'])*100/val['mjd'], '.1f'))
+        
         val['mdate'] = sorted(val['mdate'], reverse = True)[:10]
         val['istoric'] = ''.join([i[-2:] for i in val['mdate']])
         val['forta'] = 1
         
         for i in range(0, 10, 2):
             val['forta'] +=int(val['istoric'][i:i+2])/100
-        
+
         for g in range(5):
             for t in ['gda', 'gpa', 'gdd', 'gpd']:
                 val['p%s%s' %(g,t)] = float(format(poisson(g, val['m%s' %t])*100, '.3f'))

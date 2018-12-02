@@ -6,13 +6,13 @@ from sql_lib import sql
 
 #get_csv()
 
+"""
 for fl in get_file_path()['small']:
     recreate_small(fl)
 
 analiza_csv()
     
 analiza_sql()
-
 """
 for fl in get_file_path()['big']:
     year = fl.split('_')[-1].rstrip('.csv')
@@ -24,4 +24,3 @@ for fl in get_file_path()['big']:
             dic = {'name': k}
             dic.update(v)
             sql().add_value(db = 'data/all_%s.db' %year, tb = liga, **dic)
-"""
